@@ -1,0 +1,50 @@
+# Approved configuration baseline (source: DES-002). Changes to this file are
+# themselves control changes: they require CODEOWNERS approval from Security.
+github:
+  scope_property: soc2_scope
+  default_branch: main
+  default_branch_ruleset:
+    name: soc2-default-branch-protection
+    enforcement: active
+    required_rules: [deletion, non_fast_forward, pull_request, required_status_checks, code_scanning]
+    pull_request:
+      required_approving_review_count_min: 1
+      dismiss_stale_reviews_on_push: true
+      require_code_owner_review: true
+      require_last_push_approval: true
+    required_status_checks: ["ci / test", "ci / dependency-review", "CodeQL"]
+  actions:
+    allowed_actions: [selected, local_only]      # "all" fails
+    sha_pinning_required: true
+    default_workflow_permissions: read
+    can_approve_pull_request_reviews: false
+  production_environment:
+    name: production
+    servicenow_app_slug_contains: servicenow
+    can_admins_bypass: false
+    require_branch_policy: true
+
+servicenow:
+  ticket_table: incident          # or sc_task / a custom compliance table
+  category: compliance
+  assignment_groups:
+    drift: "Platform Engineering"
+    change: "Change Management"
+    access: "IT Identity"
+    evidence: "Compliance"
+  change:
+    types: [standard, normal, emergency]
+    emergency_retro_approval_business_days: 2
+  privileged_roles: [admin, security_admin, change_manager]
+
+access_review:
+  inactive_days: 90
+  max_github_org_owners: 3
+
+# Recurring evidence the QA check expects per quarter (control -> minimum artifacts)
+evidence_expectations:
+  CHG-01: 60     # nightly ruleset export (~90/quarter; allow for gaps to be flagged not failed)
+  CHG-05: 3      # monthly non-pipeline change report
+  CHG-06: 1      # quarterly deploy <-> change reconciliation
+  IAM-04: 1      # quarterly access review packet
+  MON-06: 60     # daily control-drift results
